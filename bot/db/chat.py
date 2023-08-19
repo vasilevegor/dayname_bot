@@ -36,7 +36,12 @@ async def get_chat(chat_id: int, session_maker: sessionmaker):
             result = await session.execute(select(Chat)
                                            .where(Chat.chat_id == chat_id)
                                            .order_by(Chat.id.desc()))
-            return result
+            nickname_list = []
+            foreword_list = []
+            for nickname in result.scalars():
+                nickname_list.append(nickname.nickname)
+                foreword_list.append(nickname.foreword)
+            return nickname_list, foreword_list
         
         
 async def set_chat(chat_id: int, user_id: int, nickname: str, session_maker: sessionmaker, role: int = 0, foreword: str = default_foreword):

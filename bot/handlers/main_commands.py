@@ -19,8 +19,9 @@ router.message.middleware(RegisterCheck())
 
 @router.message(Command(commands=["dayname"]))
 async def day_pharase(message: types.Message, session_maker: sessionmaker) -> None:
-    nickname_list = await get_chat(message.chat.id, session_maker=session_maker)
-    await message.answer(f'{nickname_list.foreword}: <b>{random.choice(nickname_list.nickname.limit(10))}</b>')
+    nickname_list, foreword_list = await get_chat(message.chat.id, session_maker=session_maker)
+    # await message.answer(f'{nickname_list}: <b>{random.choice(nickname_list.nickname.limit(10))}</b>')
+    await message.answer(f"{foreword_list[-1]}: {random.choice(nickname_list)}")
     
     
 @router.message(Command(commands=["newname"]))

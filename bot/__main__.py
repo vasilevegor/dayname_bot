@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.utils.markdown import hbold
+from aiogram.fsm.storage.memory import MemoryStorage
+
 from sqlalchemy import URL
 
 from handlers import router, scheduler
@@ -13,20 +15,17 @@ from db import create_async_engine, get_session_maker
 
 load_dotenv()
 
-TOKEN = os.getenv("token")
-        
-
-async def on_startup(dp): 
-    asyncio.create_task(scheduler())        
+TOKEN = os.getenv("token")       
 
 
 async def main() -> None:
     
-    dp = Dispatcher()   
+    storage = MemoryStorage()
+    dp = Dispatcher(storage=storage)
     dp.include_router(router)
 
     bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
-    await dp.start_polling(bot, on_startup=on_startup)
+    
     
     postgres_url = URL.create(
         "postgresql+asyncpg",
@@ -39,6 +38,8 @@ async def main() -> None:
     
     async_engine = create_async_engine(postgres_url)
     session_maker = get_session_maker(async_engine)
+    
+    await dp.start_polling(bot, session_maker=session_maker)
 
 
 if __name__ == "__main__":

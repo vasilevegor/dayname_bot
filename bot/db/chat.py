@@ -19,7 +19,7 @@ class Chat(BaseModel):
     
     role: Mapped[int] = mapped_column(Integer, default=0, unique=False, nullable=False)
 
-    nickname: Mapped[str] = mapped_column(String(32), unique=False)
+    nickname: Mapped[str] = mapped_column(String(32), unique=False, nullable=True)
     
     foreword: Mapped[str] = mapped_column(String(32), default=default_foreword, unique=False)
 
@@ -39,7 +39,7 @@ async def get_chat(chat_id: int, session_maker: sessionmaker):
             return result
         
         
-async def set_chat(chat_id: int, user_id: int, role: int = 0, nickname: str, foreword: str = default_foreword, session_maker: sessionmaker):
+async def set_chat(chat_id: int, user_id: int, nickname: str, session_maker: sessionmaker, role: int = 0, foreword: str = default_foreword):
     async with session_maker() as session:
         async with session.begin():
             chat = Chat(chat_id=chat_id,

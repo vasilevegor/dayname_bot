@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 import aioschedule
 
-from db import get_chat, set_chat
+from db import get_chat, set_chat, del_chat
 from middlewares import RegisterCheck
 
 
@@ -21,7 +21,7 @@ router.message.middleware(RegisterCheck())
 async def day_pharase(message: types.Message, session_maker: sessionmaker) -> None:
     nickname_list, foreword_list = await get_chat(message.chat.id, session_maker=session_maker)
     # await message.answer(f'{nickname_list}: <b>{random.choice(nickname_list.nickname.limit(10))}</b>')
-    await message.answer(f"{foreword_list[-1]}: {random.choice(nickname_list)}")
+    await message.answer(f"{set(foreword_list)[0]}: {random.choice(set(nickname_list))}")
     
     
 @router.message(Command(commands=["newname"]))
@@ -34,18 +34,23 @@ async def add_new_phrase(message: types.Message, command: CommandObject, session
     
     
 @router.message(Command(commands=["setphrase"]))
-async def set_phrase(message: types.Message, command: CommandObject) -> None:
+async def set_phrase(message: types.Message, command: CommandObject, session_maker: sessionmaker) -> None:
     if command.args:
         await message.answer(F'Новое предисловие <b>"{command.args}"</b>')
+        await set_chat(message.chat.id, message.from_user.id, foreword=command.args, session_maker=session_maker)
     else:
         await message.answer('Погоди, погоди, после /setphrase нужно дописать предисловие')  
 
 
 @router.message(Command(commands=["namelist"]))
-async def get_name_list(message: types.Message) -> None:
+async def get_name_list(message: types.Message, session_maker: sessionmaker) -> None:
+    nickname_list, foreword_list = await get_chat(message.chat.id, session_maker=session_maker)
+    nickname_list = set(nickname_list)
+    
     phrases_message = ''
     count = 0
-    for phrase in phrases:
+    print(set(nickname_list))
+    for phrase in set(nickname_list):
         phrase_msg = f'{count}: <b>{phrase}</b>'
         phrases_message += phrase_msg + '\n'
         count += 1
@@ -53,20 +58,23 @@ async def get_name_list(message: types.Message) -> None:
         
        
 @router.message(Command(commands=["delname"]))
-async def del_phrase(message: types.Message, command: CommandObject) -> None:
+async def del_phrase(message: types.Message, command: CommandObject, session_maker: sessionmaker) -> None:
     user_msg = command.args
+    
+    nickname_list, foreword_list = await get_chat(message.chat.id, session_maker=session_maker)
+
     
     if user_msg is None:
         await message.answer('Погоди, погоди, после /delname нужно дописать кликуху или ее номер.\nИспользуйте /namelist для того чтобы увидеть список кликух.')
 
     
-    if user_msg in phrases:
-        phrases.remove(user_msg)
+    if user_msg in nickname_list:
+        await del_chat(chat_id=message.chat.id, nickname=user_msg, session_maker=session_maker)
         await message.answer(f'Кликуха <b>"{user_msg}"</b> удалена')
     elif user_msg.isnumeric():
-        if 0 <= int(user_msg) < len(phrases):
-            await message.answer(f'Кликуха <b>"{phrases[int(user_msg)]}"</b> удалена')
-            phrases.pop(int(user_msg))
+        if 0 <= int(user_msg) < len(nickname_list):
+            await message.answer(f'Кликуха <b>"{nickname_list[int(user_msg)]}"</b> удалена')
+            await del_chat(chat_id=message.chat.id, nickname=nickname_list[int(user_msg)], session_maker=session_maker)
         else:
             await message.answer(f'Стопэ, фразы с таким номером не существует')
     else:

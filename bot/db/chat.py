@@ -1,7 +1,9 @@
 from datetime import datetime, date
 import datetime
 
-from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, DATE, String, BigInteger, select
+from sqlalchemy import (Column, ForeignKey, Integer, VARCHAR, 
+                        DATE, String, BigInteger, select, delete)
+
 from sqlalchemy.orm import Mapped, mapped_column, sessionmaker
 
 from .base import BaseModel
@@ -39,12 +41,16 @@ async def get_chat(chat_id: int, session_maker: sessionmaker):
             nickname_list = []
             foreword_list = []
             for nickname in result.scalars():
-                nickname_list.append(nickname.nickname)
+                if (nickname.nickname is None) or (nickname.foreword is None):
+                    pass
+                else:
+                    nickname_list.append(nickname.nickname)
+                
                 foreword_list.append(nickname.foreword)
             return nickname_list, foreword_list
         
         
-async def set_chat(chat_id: int, user_id: int, nickname: str, session_maker: sessionmaker, role: int = 0, foreword: str = default_foreword):
+async def set_chat(chat_id: int, user_id: int, session_maker: sessionmaker, nickname: str = None, role: int = 0, foreword: str = default_foreword):
     async with session_maker() as session:
         async with session.begin():
             chat = Chat(chat_id=chat_id,
@@ -54,3 +60,19 @@ async def set_chat(chat_id: int, user_id: int, nickname: str, session_maker: ses
                         foreword=foreword
                         )
             session.add(chat)
+            
+            
+async def del_chat(chat_id: int, nickname: str, session_maker: sessionmaker):
+    async with session_maker() as session:
+        async with session.begin():
+            delete_nickname = (delete(Chat)
+            .where(Chat.chat_id == chat_id)
+            .where(Chat.nickname == nickname))
+            await session.execute(delete_nickname)
+            
+async def get_nickname_id(nickname: str, session_maker: sessionmaker):
+    async with session_maker() as session:
+        async with session.begin():
+            result = await session.execute(select(Chat).where(Chat.nickname == nickname))
+            nickname_id = result.first()
+            return nickname_id

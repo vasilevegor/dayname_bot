@@ -1,0 +1,12 @@
+venv/
+.env
+.flake8
+.isort.cfg
+alembic.ini
+pre-commit
+pre-commit-config.yaml
+.black
+.env
+.flake8
+.isort.cfg
+alembic.ini

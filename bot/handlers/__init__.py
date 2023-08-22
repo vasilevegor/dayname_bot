@@ -1,1 +1,1 @@
-from .main_commands import router, scheduler
+from .main_commands import router

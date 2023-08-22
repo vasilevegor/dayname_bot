@@ -22,3 +22,4 @@ frozenlist==1.4.0
 greenlet==2.0.2
 idna==3.4
 python-dotenv==1.0.0
+apscheduler==3.10.4

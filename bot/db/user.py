@@ -1,5 +1,4 @@
 import datetime
-from datetime import datetime
 
 from sqlalchemy import DATE, BigInteger, String, select
 from sqlalchemy.orm import Mapped, mapped_column, sessionmaker
